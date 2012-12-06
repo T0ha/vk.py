@@ -6,12 +6,13 @@ import re, json
 
 
 class VK(Grab):
-    def __init__(self, aid, email, passwd):
+    def __init__(self, aid, email, passwd, scope = None):
         Grab.__init__(self, hammer_mode = True, hammer_timeouts = ((2,5), (10, 15), (20, 45)))
         self.aid = aid
         self.email = email
         self.passwd = passwd
-        self.auth_app()
+        self.scope = scope
+        self.auth_app(scope)
         
     def _check_code(self, fun = None, err = None):
         if self.response.code != 200:
@@ -25,8 +26,9 @@ class VK(Grab):
                 self.auth_app()
         return fun != None and fun(vk_res) or vk_res
             
-    def auth_app(self):
-        self.go("https://oauth.vk.com/authorize?client_id=%d&scope=audio&redirect_uri=http://oauth.vk.com/blank.html&display=popup&response_type=token" % self.aid)
+    def auth_app(self, scope = None):
+        self.scope = (scope != None and scope or self.scope)
+        self.go("https://oauth.vk.com/authorize?client_id=%d&scope=%s&redirect_uri=http://oauth.vk.com/blank.html&display=popup&response_type=token" % (self.aid, self.scope))
         self._check_code(self._auth_form, self.auth_app)()
 
     def _auth_form(self):
@@ -49,5 +51,5 @@ class VK(Grab):
         
 
 if __name__ == "__main__":
-    vk = VK(0, 'your@email', 'passwd')
+    vk = VK(0, 'your@email', 'passwd', 'audio')
     print vk.get_user_songs(12345)
